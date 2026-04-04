@@ -15,7 +15,7 @@ import { shopDataContext } from '../context/ShopContext';
 import ProfileModal from './ProfileModal';
 
 function Nav() {
-    let {getCurrentUser, userData} = useContext(userDataContext)
+    let {getCurrentUser, userData, setUserData} = useContext(userDataContext)
     let {serverUrl} = useContext(authDataContext)
     let {showSearch, setShowSearch, search, setSearch, getCartCount} = useContext(shopDataContext)
     let [showProfile, setShowProfile] = useState(false)
@@ -30,10 +30,13 @@ function Nav() {
         { withCredentials: true }
       );
       console.log(result.data);
-      getCurrentUser(); // Refresh user data
-      navigate("/login");
+      setUserData(null); // Immediately clear user data
+      setShowProfile(false);
+      navigate("/login"); // Navigate to login
     } catch (error) {
       console.log("Logout failed: ", error);
+      setUserData(null); // Clear user data even on error
+      navigate("/login");
     }
   };
 
