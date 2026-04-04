@@ -27,9 +27,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS config
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['https://onecart-recommendation-frontend.onrender.com', 'https://onecart-recommendation-admin.onrender.com'];
+const allowedOrigins = [
+  "https://onecart-recommendation-frontend.onrender.com",
+  "https://onecart-recommendation-admin.onrender.com"
+];
 
 app.use(
   cors({
