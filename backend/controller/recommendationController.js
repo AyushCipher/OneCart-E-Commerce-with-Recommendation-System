@@ -116,21 +116,20 @@ export const trackProductView = async (req, res) => {
       user.preferences.favoriteSubCategories.push(product.subCategory);
     }
 
-    // Update price range preferences
+    // Update price range preferences with null safety
     if (!user.preferences.priceRange) {
       user.preferences.priceRange = {
-        min: product.price,
-        max: product.price
+        min: Number(product.price) || 0,
+        max: Number(product.price) || 0
       };
     } else {
-      user.preferences.priceRange.min = Math.min(
-        user.preferences.priceRange.min,
-        product.price
-      );
-      user.preferences.priceRange.max = Math.max(
-        user.preferences.priceRange.max,
-        product.price
-      );
+      // Ensure we have valid numbers, not NaN
+      const currentMin = Number(user.preferences.priceRange.min) || Number(product.price) || 0;
+      const currentMax = Number(user.preferences.priceRange.max) || Number(product.price) || 0;
+      const price = Number(product.price) || 0;
+      
+      user.preferences.priceRange.min = Math.min(currentMin, price);
+      user.preferences.priceRange.max = Math.max(currentMax, price);
     }
 
     await user.save();

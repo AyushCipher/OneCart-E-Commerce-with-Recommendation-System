@@ -68,7 +68,7 @@ export const useMLTracking = (userId) => {
    */
   const trackSessionStart = useCallback(async () => {
     try {
-      await axios.post(`${API_BASE}/api/ml/track/session`, {
+      await axios.post(`${API_BASE}/api/ml/track/session-start`, {
         userId,
         sessionId: sessionId.current,
         deviceInfo: {

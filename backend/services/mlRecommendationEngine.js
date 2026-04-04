@@ -933,6 +933,224 @@ class MLRecommendationEngine {
     }
   }
 
+  // ================== GENDER-BASED PERSONALIZATION ==================
+
+  /**
+   * Calculate gender preference boost based on user profile and interactions
+   * Logic:
+   * - If user has gender in profile, prefer products for that gender
+   * - If user has significant interactions with opposite gender, reduce preference
+   * - Works like Amazon/Flipkart: initially favors profile's gender, 
+   *   but adapts as user interacts with other products
+   */
+  static async calculateGenderPreference(userId) {
+    try {
+      const user = await User.findById(userId);
+      
+      if (!user || !user.gender) {
+        return {
+          preferredGender: null,
+          strengthFactor: 0,  // 0 to 1, where 1 is maximum preference
+          hasOppositeGenderInteractions: false,
+          message: 'No gender profile set'
+        };
+      }
+
+      // Get user's interaction history with opposite gender products
+      const oppositeGenders = user.gender === 'Male' ? ['Women'] : user.gender === 'Female' ? ['Men'] : [];
+      const userGender = user.gender === 'Male' ? 'Male' : user.gender === 'Female' ? 'Female' : null;
+
+      if (!userGender) {
+        return {
+          preferredGender: null,
+          strengthFactor: 0,
+          hasOppositeGenderInteractions: false,
+          message: 'Invalid gender value'
+        };
+      }
+
+      // Count interactions with each gender
+      const viewedProducts = user.viewedProducts || [];
+      const purchasedProducts = user.purchasedProducts || [];
+      
+      const allInteractions = [
+        ...viewedProducts,
+        ...purchasedProducts
+      ];
+
+      if (allInteractions.length === 0) {
+        return {
+          preferredGender: userGender,
+          strengthFactor: 1.0,
+          hasOppositeGenderInteractions: false,
+          message: 'New user - using default preference'
+        };
+      }
+
+      // Get product details for interactions with null safety
+      const productIds = allInteractions
+        .map(i => i.productId)
+        .filter(id => id !== null && id !== undefined);
+
+      if (productIds.length === 0) {
+        return {
+          preferredGender: userGender,
+          strengthFactor: 1.0,
+          hasOppositeGenderInteractions: false,
+          message: 'No valid interactions'
+        };
+      }
+
+      const products = await Product.find({ _id: { $in: productIds } }).lean();
+      const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+      // Count opposite gender interactions with weights and null safety
+      let oppositeGenderScore = 0;
+      let profileGenderScore = 0;
+      const thresholdForOverride = 5; // Need 5+ weighted interactions to override
+
+      allInteractions.forEach(interaction => {
+        const productId = interaction.productId?.toString();
+        if (!productId) return;
+        
+        const product = productMap.get(productId);
+        if (!product || !product.gender) return;
+
+        // Weight: purchases count more than views (assume all are views in this model)
+        const weight = 1;
+
+        if (oppositeGenders.includes(product.gender)) {
+          oppositeGenderScore += weight;
+        } else if (product.gender === userGender || product.gender === 'Unisex') {
+          profileGenderScore += weight;
+        }
+      });
+
+      // Calculate strength factor
+      // If user has many opposite gender interactions, reduce preference
+      let strengthFactor = 1.0;
+      const totalScore = profileGenderScore + oppositeGenderScore;
+      
+      if (oppositeGenderScore > thresholdForOverride) {
+        // Gradually reduce preference based on opposite gender interactions
+        strengthFactor = Math.max(
+          0.3, // Minimum 0.3 (still show some preference)
+          1.0 - (oppositeGenderScore / (totalScore || 1))
+        );
+      }
+
+      // Ensure strengthFactor is a valid number
+      if (!Number.isFinite(strengthFactor)) {
+        strengthFactor = 1.0;
+      }
+
+      return {
+        preferredGender: userGender,
+        strengthFactor,
+        oppositeGenderInteractionCount: oppositeGenderScore,
+        profileGenderInteractionCount: profileGenderScore,
+        hasOppositeGenderInteractions: oppositeGenderScore > 0,
+        message: oppositeGenderScore > thresholdForOverride 
+          ? 'User shows interest in opposite gender products - reducing preference'
+          : 'Strong profile-based gender preference'
+      };
+    } catch (error) {
+      console.error('Gender preference calculation error:', error);
+      return {
+        preferredGender: null,
+        strengthFactor: 0,
+        hasOppositeGenderInteractions: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Apply gender-based preference boost to recommendations
+   * Reorders recommendations to prioritize gender-matching products initially,
+   * but weighted by the strengthFactor which decreases with opposite gender interactions
+   */
+  static async applyGenderBasedFilter(recommendations, userId) {
+    try {
+      if (!recommendations || !Array.isArray(recommendations) || recommendations.length === 0) {
+        return {
+          products: recommendations || [],
+          applied: false
+        };
+      }
+
+      const genderPreference = await this.calculateGenderPreference(userId);
+      
+      if (!genderPreference || !genderPreference.preferredGender || genderPreference.strengthFactor === 0) {
+        return {
+          products: recommendations,
+          genderPreference,
+          applied: false
+        };
+      }
+
+      const { preferredGender, strengthFactor } = genderPreference;
+
+      // Split products by gender match - add null safety
+      const matchingGender = [];
+      const oppositeGender = [];
+      const unisex = [];
+
+      recommendations.forEach(product => {
+        if (!product) return;
+        
+        if (product.gender === preferredGender) {
+          matchingGender.push(product);
+        } else if (product.gender === 'Unisex' || !product.gender) {
+          unisex.push(product);
+        } else {
+          oppositeGender.push(product);
+        }
+      });
+
+      // Calculate how many matching gender products to show
+      const matchingCount = Math.ceil(recommendations.length * strengthFactor);
+      const mixedCount = recommendations.length - matchingCount;
+
+      // Interleave: show matching gender products first, then mix in others
+      const reordered = [];
+      
+      // Add matching gender products
+      reordered.push(...matchingGender.slice(0, matchingCount));
+
+      // Add mixed products (unisex + opposite) for the remaining slots
+      const remaining = [...unisex, ...oppositeGender];
+      reordered.push(...remaining.slice(0, mixedCount));
+
+      // Fill any remaining slots
+      for (let i = reordered.length; i < recommendations.length; i++) {
+        if (matchingGender.length > matchingCount) {
+          reordered.push(matchingGender[i]);
+        } else if (remaining.length > mixedCount) {
+          reordered.push(remaining[i - matchingCount]);
+        }
+      }
+
+      return {
+        products: reordered.slice(0, recommendations.length),
+        genderPreference,
+        applied: true,
+        stats: {
+          totalRecommendations: recommendations.length,
+          matchingGenderShown: Math.ceil(recommendations.length * strengthFactor),
+          mixedShown: Math.floor(recommendations.length * (1 - strengthFactor))
+        }
+      };
+    } catch (error) {
+      console.error('Gender-based filter error:', error);
+      return {
+        products: recommendations || [],
+        applied: false,
+        error: error.message
+      };
+    }
+  }
+
   // ================== HYBRID RECOMMENDATION ==================
 
   /**
@@ -994,11 +1212,19 @@ class MLRecommendationEngine {
           return true;
         });
 
+        // Apply gender-based filter even for cold start
+        const genderFilterResult = await this.applyGenderBasedFilter(uniqueProducts.slice(0, limit), userId);
+
         return {
-          products: uniqueProducts.slice(0, limit),
+          products: genderFilterResult.products,
           strategy: 'hybrid',
           coldStart: true,
-          message: 'New user - showing top rated and popular items'
+          message: 'New user - showing top rated and popular items',
+          genderPersonalization: genderFilterResult.genderPreference ? {
+            applied: genderFilterResult.applied,
+            preferredGender: genderFilterResult.genderPreference.preferredGender,
+            strengthFactor: genderFilterResult.genderPreference.strengthFactor
+          } : null
         };
       }
 
@@ -1006,49 +1232,67 @@ class MLRecommendationEngine {
       const scoreMap = new Map();
 
       const processRecs = (recs, weight, strategyName) => {
+        // Null safety check
+        if (!recs || !recs.products || !Array.isArray(recs.products)) {
+          console.warn(`Invalid recommendation structure from ${strategyName}:`, recs);
+          return;
+        }
+
         recs.products.forEach((product, index) => {
-          const productId = product._id.toString();
-          const positionScore = 1 - (index / (recs.products.length || 1));
-          const score = (product.recommendationScore || positionScore) * weight;
+          try {
+            if (!product || !product._id) return;
+            
+            const productId = product._id.toString();
+            const positionScore = 1 - (index / (recs.products.length || 1));
+            const score = (product.recommendationScore || positionScore) * weight;
 
-          const existing = scoreMap.get(productId) || {
-            product,
-            totalScore: 0,
-            strategies: [],
-            reasons: []
-          };
+            const existing = scoreMap.get(productId) || {
+              product,
+              totalScore: 0,
+              strategies: [],
+              reasons: []
+            };
 
-          existing.totalScore += score;
-          existing.strategies.push(strategyName);
-          if (product.recommendationReason) {
-            existing.reasons.push(product.recommendationReason);
+            existing.totalScore += score;
+            existing.strategies.push(strategyName);
+            if (product.recommendationReason) {
+              existing.reasons.push(product.recommendationReason);
+            }
+
+            scoreMap.set(productId, existing);
+          } catch (itemErr) {
+            console.warn(`Error processing product in ${strategyName}:`, itemErr);
           }
-
-          scoreMap.set(productId, existing);
         });
       };
 
-      // Process each recommendation type
-      if (!contentRecs.coldStart) {
-        processRecs(contentRecs, weights.content, 'content');
-      }
-      if (!userUserRecs.coldStart) {
-        processRecs(userUserRecs, weights.userUser, 'user-user');
-      }
-      if (!itemItemRecs.coldStart) {
-        processRecs(itemItemRecs, weights.itemItem, 'item-item');
-      }
-      processRecs(trendingRecs, weights.trending, 'trending');
-      if (!categoryRecs.coldStart) {
-        processRecs(categoryRecs, weights.category, 'category');
-      }
-      // Process rating-based recommendations
-      if (!ratingRecs.coldStart && ratingRecs.products.length > 0) {
-        processRecs(ratingRecs, weights.rating, 'rating');
-      }
-      // Process review-based collaborative filtering
-      if (!reviewCFRecs.coldStart && reviewCFRecs.products.length > 0) {
-        processRecs(reviewCFRecs, weights.reviewCF, 'review-cf');
+      // Process each recommendation type with null safety
+      try {
+        if (contentRecs && !contentRecs.coldStart) {
+          processRecs(contentRecs, weights.content, 'content');
+        }
+        if (userUserRecs && !userUserRecs.coldStart) {
+          processRecs(userUserRecs, weights.userUser, 'user-user');
+        }
+        if (itemItemRecs && !itemItemRecs.coldStart) {
+          processRecs(itemItemRecs, weights.itemItem, 'item-item');
+        }
+        if (trendingRecs) {
+          processRecs(trendingRecs, weights.trending, 'trending');
+        }
+        if (categoryRecs && !categoryRecs.coldStart) {
+          processRecs(categoryRecs, weights.category, 'category');
+        }
+        // Process rating-based recommendations
+        if (ratingRecs && !ratingRecs.coldStart && ratingRecs.products && ratingRecs.products.length > 0) {
+          processRecs(ratingRecs, weights.rating, 'rating');
+        }
+        // Process review-based collaborative filtering
+        if (reviewCFRecs && !reviewCFRecs.coldStart && reviewCFRecs.products && reviewCFRecs.products.length > 0) {
+          processRecs(reviewCFRecs, weights.reviewCF, 'review-cf');
+        }
+      } catch (processingErr) {
+        console.error('Error during recommendation aggregation:', processingErr);
       }
 
       // Sort by combined score
@@ -1064,10 +1308,19 @@ class MLRecommendationEngine {
         recommendationReason: rec.reasons[0] || 'Recommended for you'
       }));
 
+      // Apply gender-based personalization filter
+      const genderFilterResult = await this.applyGenderBasedFilter(products, userId);
+
       return {
-        products,
+        products: genderFilterResult.products,
         strategy: 'hybrid',
         coldStart: false,
+        genderPersonalization: genderFilterResult.genderPreference ? {
+          applied: genderFilterResult.applied,
+          preferredGender: genderFilterResult.genderPreference.preferredGender,
+          strengthFactor: genderFilterResult.genderPreference.strengthFactor,
+          stats: genderFilterResult.stats
+        } : null,
         strategiesUsed: {
           content: !contentRecs.coldStart,
           userUser: !userUserRecs.coldStart,

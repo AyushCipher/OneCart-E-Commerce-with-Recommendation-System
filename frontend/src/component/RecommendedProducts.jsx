@@ -66,10 +66,14 @@ const RecommendedProducts = ({
           setActiveStrategy(data.strategy || strategyToUse);
           return true;
         }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`ML API error (${response.status}):`, errorData.message || response.statusText);
       }
       return false;
     } catch (err) {
-      console.log('ML API not available, falling back to legacy');
+      console.error('ML API request failed:', err.message);
+      console.log('Falling back to legacy recommendations');
       return false;
     }
   }, [userId, limit, excludeIds, backendUrl]);
@@ -100,10 +104,13 @@ const RecommendedProducts = ({
           setActiveStrategy('legacy-' + strategyToUse);
           return true;
         }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Legacy API error (${response.status}):`, errorData.message || response.statusText);
       }
       return false;
     } catch (err) {
-      console.error('Legacy recommendations failed:', err);
+      console.error('Legacy API request failed:', err.message);
       return false;
     }
   }, [userId, limit, excludeIds, backendUrl]);

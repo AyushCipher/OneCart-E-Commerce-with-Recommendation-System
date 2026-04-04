@@ -12,11 +12,14 @@ import { MdContacts } from "react-icons/md";
 import axios from 'axios';
 import { authDataContext } from '../context/AuthContext';
 import { shopDataContext } from '../context/ShopContext';
+import ProfileModal from './ProfileModal';
+
 function Nav() {
     let {getCurrentUser, userData} = useContext(userDataContext)
     let {serverUrl} = useContext(authDataContext)
     let {showSearch, setShowSearch, search, setSearch, getCartCount} = useContext(shopDataContext)
     let [showProfile, setShowProfile] = useState(false)
+    let [showProfileModal, setShowProfileModal] = useState(false)
     let navigate = useNavigate()
 
     const handleLogout = async () => {
@@ -65,8 +68,8 @@ function Nav() {
         </div>}
 
              {showProfile && (
-                 <div className='absolute w-[220px] h-[150px] bg-[#000000d7] top-[110%] right-[4%] border-[1px] border-[#aaa9a9] rounded-[10px] z-10'>
-                     <ul className='w-[100%] h-[100%] flex items-start justify-around flex-col text-[17px] py-[10px] text-[white]'>
+                 <div className='absolute w-[220px] bg-[#000000d7] top-[110%] right-[4%] border-[1px] border-[#aaa9a9] rounded-[10px] z-10'>
+                     <ul className='w-[100%] flex items-start justify-around flex-col text-[17px] py-[10px] text-[white]'>
                          {!userData && (
                              <li className='w-[100%] hover:bg-[#2f2f2f]  px-[15px] py-[10px] cursor-pointer' onClick={() => {
                                  navigate("/login");
@@ -78,6 +81,10 @@ function Nav() {
                                  <li className='w-[100%] font-bold px-[15px] py-[10px] cursor-default select-none'>
                                      {userData?.name}
                                  </li>
+                                 <li className='w-[100%] hover:bg-[#2f2f2f] px-[15px] py-[10px] cursor-pointer' onClick={() => {
+                                     setShowProfileModal(true);
+                                     setShowProfile(false);
+                                 }}>Profile</li>
                                  <li className='w-[100%] hover:bg-[#2f2f2f] px-[15px] py-[10px] cursor-pointer' onClick={() => {
                                      navigate("/order");
                                      setShowProfile(false);
@@ -118,7 +125,7 @@ function Nav() {
             </p>
         </div>
 
-
+        <ProfileModal show={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   )
 }

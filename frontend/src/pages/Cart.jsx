@@ -48,8 +48,8 @@ function Cart() {
   const totalAmount = getCartAmount();
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-l from-[#141414] to-[#0c2025] text-white p-6 ">
-      <h2 className="text-3xl font-bold text-center mt-16 mb-10">Your Cart</h2>
+    <div className="w-full min-h-screen bg-gradient-to-l from-[#141414] to-[#0c2025] text-white p-6 mt-15 pt-12">
+      <h2 className="text-3xl font-bold text-center mt-17 mb-10">Your Cart</h2>
 
       {cartEntries.length === 0 ? (
         <div className="text-center text-gray-300 mt-20">

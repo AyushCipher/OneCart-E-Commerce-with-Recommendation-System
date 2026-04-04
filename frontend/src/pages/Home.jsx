@@ -29,19 +29,30 @@ function Home() {
 
   return (
     <div className='overflow-x-hidden relative top-[70px]'>
-      <div className='w-[100vw] lg:h-[100vh] md:h-[50vh] sm:h-[30vh]   bg-gradient-to-l from-[#141414] to-[#0c2025] '>
-
-        <Backgound heroCount={heroCount}/>
-        <Hero
-        heroCount={heroCount}
-        setHeroCount={setHeroCount}
-        heroData={heroData[heroCount]}
-        /> 
-
+      {/* Hero Section with Image Background */}
+      <div className='relative w-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[80vh] lg:min-h-[100vh] bg-gradient-to-l from-[#141414] to-[#0c2025] flex items-stretch'>
+        {/* Background Image Container */}
+        <div className='absolute inset-0 w-full h-full'>
+          <Backgound heroCount={heroCount}/>
+        </div>
+        
+        {/* Hero Text and Navigation Container */}
+        <div className='relative z-10 w-full h-full flex items-center mt-12'>
+          <Hero
+            heroCount={heroCount}
+            setHeroCount={setHeroCount}
+            heroData={heroData[heroCount]}
+          /> 
+        </div>
       </div>
       
+      {/* Products Section */}
       <Product/>
+      
+      {/* Recommendations */}
       {userData?._id && <RecommendedProducts userId={userData._id} strategy="hybrid" limit={8} />}
+      
+      {/* Footer Sections */}
       <OurPolicy/>
       <NewLetterBox/>
       <Footer/>

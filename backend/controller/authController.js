@@ -39,7 +39,7 @@ const cookieConfig = {
 // ======================== REGISTER ========================
 export const registration = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, gender, dateOfBirth, profession, bio } = req.body;
 
     if (!validator.isEmail(email))
       return res.status(400).json({ message: "Invalid email!" });
@@ -60,6 +60,10 @@ export const registration = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      gender: gender || "",
+      dateOfBirth: dateOfBirth || null,
+      profession: profession || "",
+      bio: bio || "",
       isOtpVerifed: true,
     });
 

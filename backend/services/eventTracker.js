@@ -512,15 +512,25 @@ class EventTracker {
 
       // Update price preferences
       if (eventData.metadata?.productPrice) {
-        const price = eventData.metadata.productPrice;
+        const price = Number(eventData.metadata.productPrice) || 0;
         if (!profile.pricePreference) {
-          profile.pricePreference = { min: price, max: price, average: price };
+          profile.pricePreference = {
+            min: price,
+            max: price,
+            average: price,
+            median: price,
+            variance: 0,
+            segment: 'unknown'
+          };
         } else {
-          profile.pricePreference.min = Math.min(profile.pricePreference.min, price);
-          profile.pricePreference.max = Math.max(profile.pricePreference.max, price);
+          // Ensure values are numbers, not NaN
+          profile.pricePreference.min = Math.min(profile.pricePreference.min || price, price);
+          profile.pricePreference.max = Math.max(profile.pricePreference.max || price, price);
           // Simple moving average
-          profile.pricePreference.average = 
-            (profile.pricePreference.average + price) / 2;
+          const avgPrice = profile.pricePreference.average || 0;
+          profile.pricePreference.average = (avgPrice + price) / 2;
+          profile.pricePreference.median = (profile.pricePreference.median || 0);
+          profile.pricePreference.variance = (profile.pricePreference.variance || 0);
         }
         
         // Determine price segment

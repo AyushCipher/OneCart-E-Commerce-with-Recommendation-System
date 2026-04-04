@@ -27,12 +27,23 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS config
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:5174']; // fallback for dev
+
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'], // frontend URLs
+    origin: allowedOrigins,
     credentials: true, // allow cookies to be sent
   })
 );
+
+// Add Cross-Origin-Opener-Policy header to suppress Firebase warnings
+// This allows Firebase auth popups to work properly
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  next();
+});
 
 // Define Routes
 app.use('/api/auth', authRoutes);

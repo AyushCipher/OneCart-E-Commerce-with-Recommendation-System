@@ -13,13 +13,12 @@ import { UserProfile, ProductFeatures, RecommendationCache } from "../model/mlMo
 // ================== RECOMMENDATION ENDPOINTS ==================
 
 /**
- * GET /api/ml/recommendations
+ * POST /api/ml/recommendations
  * Get personalized recommendations for user
  */
 export const getMLRecommendations = async (req, res) => {
   try {
-    const { strategy = 'hybrid', limit = 10 } = req.query;
-    const { userId, excludeIds = [] } = req.body;
+    const { strategy = 'hybrid', limit = 10, userId, excludeIds = [] } = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -28,24 +27,54 @@ export const getMLRecommendations = async (req, res) => {
       });
     }
 
+    // Ensure user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
     // Generate fresh recommendations (skip cache when excludeIds provided)
-    const result = await MLRecommendationEngine.getRecommendations(userId, {
-      strategy,
-      limit: parseInt(limit),
-      excludeProductIds: excludeIds
-    });
+    let result;
+    try {
+      result = await MLRecommendationEngine.getRecommendations(userId, {
+        strategy,
+        limit: parseInt(limit),
+        excludeProductIds: excludeIds
+      });
+    } catch (engineError) {
+      console.error(`ML Engine error for strategy ${strategy}:`, engineError.message);
+      // Return graceful fallback
+      result = {
+        products: [],
+        strategy: strategy,
+        coldStart: true,
+        error: engineError.message
+      };
+    }
+
+    // Validate result structure
+    if (!result || typeof result !== 'object') {
+      throw new Error('Invalid recommendation engine response');
+    }
+
+    if (!result.products || !Array.isArray(result.products)) {
+      result.products = [];
+    }
 
     res.status(200).json({
       success: true,
-      strategy,
+      strategy: result.strategy || strategy,
       count: result.products.length,
       coldStart: result.coldStart || false,
-      strategiesUsed: result.strategiesUsed,
+      strategiesUsed: result.strategiesUsed || [],
       cached: false,
       data: result.products
     });
   } catch (error) {
-    console.error("Error fetching ML recommendations:", error);
+    console.error("Error fetching ML recommendations:", error.message || error);
     res.status(500).json({
       success: false,
       message: "Error fetching recommendations",

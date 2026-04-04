@@ -80,60 +80,62 @@ function Collections() {
   }, [category, subCategory, search, showSearch])
 
   return (
-    <div className='w-[99vw] min-h-[100vh] bg-gradient-to-l from-[#141414] to-[#0c2025] flex items-start flex-col md:flex-row justify-start pt-[70px] overflow-x-hidden z-[2] pb-[130px]'>
-      <div className={`md:w-[30vw] lg:w-[20vw] w-[100vw] md:min-h-[100vh] p-[20px] border-r-[1px] border-gray-400 text-[#aaf5fa] lg:fixed transition-all duration-300  ${showFilter ? "h-auto pb-8" : "h-[8vh]"}`}>
+    <div className='w-full min-h-screen bg-gradient-to-l from-[#141414] to-[#0c2025] flex items-start flex-col md:flex-row justify-start pt-[70px] overflow-x-hidden pb-[130px]'>
+      
+      {/* SIDEBAR FILTER */}
+      <div className={`
+        md:w-[260px] lg:w-[220px] flex-shrink-0
+        w-full md:min-h-screen p-5
+        border-b md:border-b-0 md:border-r border-gray-600
+        text-[#aaf5fa]
+        lg:fixed lg:top-[70px] lg:left-0 lg:h-[calc(100vh-70px)] lg:overflow-y-auto
+        transition-all duration-300
+        ${showFilter ? "h-auto pb-8" : "h-[60px] overflow-hidden md:overflow-visible md:h-auto"}
+      `}>
         <p
-          className='text-[25px] font-semibold flex gap-[5px] items-center justify-start cursor-pointer'
+          className='text-[22px] font-semibold flex gap-2 items-center justify-start cursor-pointer select-none'
           onClick={() => setShowFilter(prev => !prev)}
         >
           FILTERS
-          {!showFilter && <FaChevronRight className='text-[18px] md:hidden' />}
-          {showFilter && <FaChevronDown className='text-[18px] md:hidden' />}
+          {!showFilter && <FaChevronRight className='text-[16px] md:hidden' />}
+          {showFilter && <FaChevronDown className='text-[16px] md:hidden' />}
         </p>
 
         {/* CATEGORY FILTER */}
-        <div className={`border-[2px] border-[#dedcdc] pl-5 py-3 mt-6 rounded-md bg-slate-600 ${showFilter ? "" : "hidden"} md:block`}>
-          <p className='text-[18px] text-[#f8fafa]'>CATEGORIES</p>
-          <div className='w-[230px] h-[120px] flex items-start justify-center gap-[10px] flex-col'>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'Men'} className='w-3' onChange={toggleCategory} /> Men
-            </p>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'Women'} className='w-3' onChange={toggleCategory} /> Women
-            </p>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'Kids'} className='w-3' onChange={toggleCategory} /> Kids
-            </p>
+        <div className={`border-2 border-[#dedcdc] pl-5 py-3 mt-6 rounded-md bg-slate-600 ${showFilter ? "block" : "hidden"} md:block`}>
+          <p className='text-[16px] text-[#f8fafa] font-semibold mb-2'>CATEGORIES</p>
+          <div className='flex flex-col gap-2'>
+            {['Men', 'Women', 'Kids'].map(cat => (
+              <label key={cat} className='flex items-center gap-3 cursor-pointer'>
+                <input type="checkbox" value={cat} className='w-3 h-3 accent-cyan-400' onChange={toggleCategory} />
+                <span>{cat}</span>
+              </label>
+            ))}
           </div>
         </div>
 
         {/* SUBCATEGORY FILTER */}
-        <div className={`border-[2px] border-[#dedcdc] pl-5 py-3 mt-6 rounded-md bg-slate-600 ${showFilter ? "" : "hidden"} md:block`}>
-          <p className='text-[18px] text-[#f8fafa]'>SUB-CATEGORIES</p>
-          <div className='w-[230px] h-[160px] flex items-start justify-center gap-[10px] flex-col'>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'TopWear'} className='w-3' onChange={toggleSubCategory} /> TopWear
-            </p>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'BottomWear'} className='w-3' onChange={toggleSubCategory} /> BottomWear
-            </p>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'WinterWear'} className='w-3' onChange={toggleSubCategory} /> WinterWear
-            </p>
-            <p className='flex items-center gap-[10px]'>
-              <input type="checkbox" value={'FootWear'} className='w-3' onChange={toggleSubCategory} /> FootWear
-            </p>
+        <div className={`border-2 border-[#dedcdc] pl-5 py-3 mt-4 rounded-md bg-slate-600 ${showFilter ? "block" : "hidden"} md:block`}>
+          <p className='text-[16px] text-[#f8fafa] font-semibold mb-2'>SUB-CATEGORIES</p>
+          <div className='flex flex-col gap-2'>
+            {['TopWear', 'BottomWear', 'WinterWear', 'FootWear'].map(sub => (
+              <label key={sub} className='flex items-center gap-3 cursor-pointer'>
+                <input type="checkbox" value={sub} className='w-3 h-3 accent-cyan-400' onChange={toggleSubCategory} />
+                <span>{sub}</span>
+              </label>
+            ))}
           </div>
         </div>
       </div>
 
       {/* PRODUCT DISPLAY */}
-      <div className='lg:pl-[20%] md:py-[10px]'>
-        <div className='md:w-[80vw] w-[100vw] flex justify-between flex-col lg:flex-row lg:px-[50px] pl-5'>
+      <div className='flex-1 min-w-0 lg:ml-[220px] w-full px-4 md:px-6 lg:px-8'>
+        
+        {/* TOP BAR */}
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pt-2'>
           <Title text1={"ALL"} text2={"COLLECTIONS"} />
-
           <select
-            className='bg-slate-600 w-[60%] md:w-[200px] h-[50px] px-[10px] text-[white] rounded-lg hover:border-[#46d1f7] border-[2px]'
+            className='bg-slate-600 w-[200px] h-[44px] px-3 text-white rounded-lg border-2 border-slate-500 hover:border-[#46d1f7] transition-colors focus:outline-none focus:border-[#46d1f7]'
             onChange={(e) => setSortType(e.target.value)}
           >
             <option value="relavent">Sort By: Relevant</option>
@@ -142,13 +144,28 @@ function Collections() {
           </select>
         </div>
 
-        <div className='lg:w-[80vw] md:w-[60vw] w-[100vw] min-h-[70vh] flex items-center justify-center flex-wrap gap-[30px] mt-7'>
-          {
-            filterProduct.map((item, index) => (
-              <Card key={index} id={item._id} name={item.name} price={item.price} image={item.image1} rating={item.ratings} reviewCount={item.numOfReviews} />
-            ))
-          }
+        {/* GRID */}
+        <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-8'>
+          {filterProduct.map((item, index) => (
+            <Card
+              key={index}
+              id={item._id}
+              name={item.name}
+              price={item.price}
+              image={item.image1}
+              rating={item.ratings}
+              reviewCount={item.numOfReviews}
+            />
+          ))}
         </div>
+
+        {/* EMPTY STATE */}
+        {filterProduct.length === 0 && (
+          <div className='flex flex-col items-center justify-center h-64 text-gray-400'>
+            <p className='text-xl'>No products found</p>
+            <p className='text-sm mt-2'>Try adjusting your filters</p>
+          </div>
+        )}
       </div>
     </div>
   )

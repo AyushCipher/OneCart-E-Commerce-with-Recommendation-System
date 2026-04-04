@@ -66,7 +66,7 @@ function ProductDetail() {
           name: productData.name,
         });
         hasTrackedView.current = true;
-      }, 1500); // Track after 1.5 seconds (meaningful view)
+      }, 1500);
 
       return () => clearTimeout(timer);
     }
@@ -102,7 +102,7 @@ function ProductDetail() {
       toast.success("Review added!");
       setRating(0);
       setComment("");
-      getProductReviews(productId); // Refresh instantly
+      getProductReviews(productId);
     } else {
       toast.error(res.msg);
     }
@@ -170,7 +170,6 @@ function ProductDetail() {
             className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded shadow"
             onClick={() => {
               addtoCart(productData._id, size);
-              // ML Tracking: Track add to cart
               trackAddToCart(productData._id, {
                 price: productData.price,
                 size: size,
@@ -193,7 +192,7 @@ function ProductDetail() {
 
       {/* DESCRIPTION & REVIEWS */}
       <div className="mt-16 px-6 lg:px-16">
-        
+
         {/* TAB SWITCHER */}
         <div className="flex gap-6 border-b border-gray-700">
           <button
@@ -219,9 +218,9 @@ function ProductDetail() {
           </button>
         </div>
 
-        {/* DESCRIPTION CONTENT */}
+        {/* DESCRIPTION CONTENT — full width */}
         {activeTab === "description" && (
-          <div className="mt-4 text-gray-300 text-lg w-full lg:w-2/3">
+          <div className="mt-4 text-gray-300 text-lg w-full">
             {productData.description}
           </div>
         )}
@@ -238,7 +237,7 @@ function ProductDetail() {
                   <FaStar
                     key={star}
                     onClick={() => setRating(star)}
-                    className={`cursor-pointer ${
+                    className={`cursor-pointer text-2xl ${
                       star <= rating ? "text-yellow-400" : "text-gray-600"
                     }`}
                   />
@@ -268,13 +267,12 @@ function ProductDetail() {
               ) : (
                 productReviews.map((rev, i) => (
                   <div key={i} className="border-b border-gray-700 pb-4 mb-4">
-                    
+
                     {/* User + Avatar */}
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-semibold">
                         {rev?.user?.name?.slice(0, 1).toUpperCase()}
                       </div>
-
                       <div>
                         <p className="font-medium">{rev?.user?.name}</p>
                       </div>
@@ -310,9 +308,9 @@ function ProductDetail() {
 
       {/* RECOMMENDED PRODUCTS FOR USER */}
       {userData?._id && (
-        <RecommendedProducts 
-          userId={userData._id} 
-          strategy="hybrid" 
+        <RecommendedProducts
+          userId={userData._id}
+          strategy="hybrid"
           limit={8}
           excludeIds={[productData._id]}
           currentCategory={productData.category}

@@ -13,32 +13,32 @@ function Card({ name, image, id, price, rating }) {
   return (
     <div
       onClick={() => navigate(`/productdetail/${id}`)}
-      className="w-[300px] max-w-[90%] bg-white/10 backdrop-blur-lg rounded-xl shadow-md hover:shadow-xl hover:scale-[102%] transition-all duration-300 cursor-pointer border border-white/20"
+      className="w-full bg-white/10 backdrop-blur-lg rounded-xl shadow-md hover:shadow-xl hover:scale-[103%] transition-all duration-300 cursor-pointer border border-white/20 overflow-hidden"
     >
       {/* IMAGE */}
       <img
         src={image}
         alt={name}
-        className="w-full h-60 object-cover rounded-t-xl"
+        className="w-full h-56 object-cover"
       />
 
       {/* CONTENT */}
-      <div className="p-4 text-white">
+      <div className="p-3 sm:p-4 text-white">
         {/* NAME */}
-        <h3 className="text-[18px] font-semibold leading-tight line-clamp-2">
+        <h3 className="text-sm sm:text-base font-semibold leading-snug line-clamp-2 mb-2">
           {name}
         </h3>
 
         {/* PRICE + RATING */}
-        <div className="flex items-center justify-between mt-3">
-          <p className="text-[17px] font-medium">
+        <div className="flex items-center justify-between">
+          <p className="text-sm sm:text-base font-medium">
             {currency} {price}
           </p>
 
           {/* RATING */}
           <div className="flex items-center gap-1 text-yellow-400">
-            <FaStar className="text-[15px]" />
-            <span className="text-sm text-white/80">{displayRating}</span>
+            <FaStar className="text-xs sm:text-sm" />
+            <span className="text-xs sm:text-sm text-white/80">{displayRating}</span>
           </div>
         </div>
       </div>

@@ -35,8 +35,8 @@ function Login() {
             toast.success("User Login Successful")
             setLoading(false)
         } catch (error) {
-            console.log(error)
-            toast.error("User Login Failed")
+            console.error("Login error:", error.response?.data?.message || error.message)
+            toast.error(error.response?.data?.message || "User Login Failed")
             setLoading(false)
         }
     }
@@ -51,8 +51,18 @@ function Login() {
             const result = await axios.post(serverUrl + "/api/auth/googlelogin", { name, email }, { withCredentials: true })
             getCurrentUser()
             navigate("/")
+            toast.success("Google Login Successful")
         } catch (error) {
-            console.log(error)
+            // Filter out COOP warnings - they don't prevent authentication
+            if (error.message && error.message.includes('Cross-Origin-Opener-Policy')) {
+                console.debug('Browser security notice (non-blocking):', error.message);
+                return;
+            }
+            // Log only actual firebase errors, not policy warnings
+            if (error.code !== 'auth/popup-blocked') {
+                console.error("Google login error:", error.message || error.code)
+                toast.error(error.message || "Google Login Failed")
+            }
         }
     }
 

@@ -68,6 +68,11 @@ const productSchema = new mongoose.Schema({
             ref: "Review"
         }
     ],
+    gender:{
+        type:String,
+        enum:["Men","Women","Unisex"],
+        default:"Unisex"
+    }
 
 },{timestamps:true})
 

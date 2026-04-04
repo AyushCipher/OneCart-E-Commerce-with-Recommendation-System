@@ -11,6 +11,12 @@ export const addProduct = async (req,res) => {
         let image3 = await uploadOnCloudinary(req.files.image3[0].path)
         let image4 = await uploadOnCloudinary(req.files.image4[0].path)
         
+        // Map category to gender field for recommendations
+        let gender = "Unisex"
+        if (category === "Men") gender = "Men"
+        else if (category === "Women") gender = "Women"
+        // Kids category stays as Unisex for now
+        
         let productData = {
             name,
             description,
@@ -19,6 +25,7 @@ export const addProduct = async (req,res) => {
             subCategory,
             sizes: JSON.parse(sizes),
             bestseller: bestseller === "true" ? true : false,
+            gender,
             date: Date.now(),
             image1,
             image2,
@@ -84,6 +91,14 @@ export const editProduct = async (req, res) => {
         if (req.files && req.files.image4) updateData.image4 = await uploadOnCloudinary(req.files.image4[0].path);
         if (updateData.sizes) updateData.sizes = JSON.parse(updateData.sizes);
         if (typeof updateData.bestseller === 'string') updateData.bestseller = updateData.bestseller === 'true';
+        
+        // Update gender based on category if category is changed
+        if (updateData.category) {
+            if (updateData.category === "Men") updateData.gender = "Men"
+            else if (updateData.category === "Women") updateData.gender = "Women"
+            else updateData.gender = "Unisex"
+        }
+        
         const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });

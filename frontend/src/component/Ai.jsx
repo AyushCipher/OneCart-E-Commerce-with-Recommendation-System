@@ -1,14 +1,24 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useRef, useEffect } from 'react'
 import ai from "../assets/ai.png"
 import { shopDataContext } from '../context/ShopContext'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import open from "../assets/open.mp3"
+import openAudio from "../assets/open.mp3"
+
 function Ai() {
   let {showSearch , setShowSearch} = useContext(shopDataContext)
   let navigate = useNavigate()
   let [activeAi,setActiveAi] = useState(false)
-  let openingSound = new Audio(open)
+  let openingSoundRef = useRef(null)
+
+  // Initialize audio on component mount
+  useEffect(() => {
+    try {
+      openingSoundRef.current = new Audio(openAudio)
+    } catch (error) {
+      console.warn('Audio initialization warning:', error.message)
+    }
+  }, [])
 
   function speak(message){
     let utterence=new SpeechSynthesisUtterance(message)
@@ -73,9 +83,20 @@ function Ai() {
   }
 
   return (
-    <div className='fixed lg:bottom-[20px] md:bottom-[40px] bottom-[80px] left-[2%]' onClick={()=>{recognition.start();
-    openingSound.play()
-    setActiveAi(true)
+    <div className='fixed lg:bottom-[20px] md:bottom-[40px] bottom-[80px] left-[2%]' onClick={()=>{
+      recognition.start();
+      // Safely play audio with error handling
+      if (openingSoundRef.current) {
+        try {
+          openingSoundRef.current.currentTime = 0;
+          openingSoundRef.current.play().catch(err => {
+            console.warn('Audio playback warning:', err.message)
+          });
+        } catch (error) {
+          console.warn('Audio play error:', error.message)
+        }
+      }
+      setActiveAi(true)
     }}>
       <img src={ai} alt="" className={`w-[100px] cursor-pointer ${activeAi ? 'translate-x-[10%] translate-y-[-10%] scale-125 ' : 'translate-x-[0] translate-y-[0] scale-100'} transition-transform` } style={{
         filter: ` ${activeAi?"drop-shadow(0px 0px 30px #00d2fc)":"drop-shadow(0px 0px 20px black)"}`

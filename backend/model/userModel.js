@@ -14,6 +14,22 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String
   },
+  gender: {
+    type: String,
+    default: ""
+  },
+  dateOfBirth: {
+    type: Date,
+    default: null
+  },
+  profession: {
+    type: String,
+    default: ""
+  },
+  bio: {
+    type: String,
+    default: ""
+  },
   cartData: {
     type: Object,
     default: {}
