@@ -140,7 +140,7 @@ export const RECOMMENDATION_CONFIG = {
 
   // API Settings
   api: {
-    baseUrl: process.env.BACKEND_URL || process.env.API_URL || 'http://localhost:8000',
+    baseUrl: process.env.BACKEND_URL || 'http://localhost:8000',
     timeout: 5000,
     retryAttempts: 2,
     retryDelay: 1000
