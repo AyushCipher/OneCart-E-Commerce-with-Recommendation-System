@@ -409,7 +409,3 @@ Base backend URL: `http://localhost:8000`
 ## License
 
 This project is licensed under the ISC License.
-
----
-
-If you want, the next high-value step is to add screenshots, a live demo link, and badges for deployment status once the project is hosted.
