@@ -79,18 +79,6 @@ The admin app is a separate React + Vite interface dedicated to product creation
 | Auth | Firebase Google sign-in, JWT-based sessions |
 | Recommendation / ML | Hybrid recommendation engine, TF-IDF-style content similarity, user-user collaborative filtering, review-based collaborative filtering, popularity ranking, cold-start logic |
 
-## AI / LLM Technologies Used
-
-This project does not currently depend on an external hosted LLM such as OpenAI or Gemini. Instead, its AI layer is implemented through product intelligence, behavioral analytics, and browser-native interaction features.
-
-| Capability | Implementation |
-| --- | --- |
-| Personalized recommendations | Hybrid recommendation pipeline mixing content-based, collaborative, popularity, category, rating, and review-based signals |
-| Cold-start handling | Category and preference-aware recommendation generation for new users |
-| Behavioral intelligence | Tracking for views, searches, add-to-cart actions, purchases, clicks, and dwell time |
-| Voice interaction | Browser SpeechRecognition for intent detection and SpeechSynthesis for spoken feedback |
-| Social sign-in | Firebase Google login for lower-friction authentication |
-
 ## System Design / Workflow
 
 ```mermaid
@@ -123,17 +111,6 @@ sequenceDiagram
 5. The backend clears the cart, stores the order, and updates analytics signals.
 6. Admins manage catalog entries and order status from the admin console.
 
-## Multi-Agent Architecture
-
-This application does not use a runtime multi-agent system in production. The architecture is instead a clean modular monolith:
-
-- Frontend app for shoppers.
-- Admin app for operators.
-- API controllers for business actions.
-- Service layer for recommendation intelligence and event tracking.
-- MongoDB models for persistence and analytics.
-
-If you want to evolve this into a multi-agent system later, the recommendation layer would be the natural place to introduce specialized agents for catalog enrichment, demand forecasting, personalization, and campaign optimization.
 
 ## Folder Structure
 
