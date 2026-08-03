@@ -13,7 +13,9 @@ function ShopContext({ children }) {
   const [showSearch, setShowSearch] = useState(false);
   const { serverUrl } = useContext(authDataContext);
   const [cartItem, setCartItem] = useState({});
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount }
 
   const currency = "₹";
   const delivery_fee = 40;
@@ -134,6 +136,88 @@ function ShopContext({ children }) {
   };
 
   // ==============================
+  // FETCH WISHLIST
+  // ==============================
+  const getUserWishlist = async () => {
+    if (!userData) return setWishlist([]); // guest user
+
+    try {
+      const result = await axios.get(serverUrl + "/api/wishlist/get", {
+        withCredentials: true,
+      });
+
+      setWishlist(result.data || []);
+    } catch (err) {
+      console.log("Wishlist Fetch Error:", err);
+      setWishlist([]);
+    }
+  };
+
+  // ==============================
+  // TOGGLE WISHLIST
+  // ==============================
+  const isInWishlist = (itemId) =>
+    wishlist.some((item) => item._id === itemId);
+
+  const toggleWishlist = async (itemId) => {
+    if (!userData) return toast.error("Login to use wishlist!");
+
+    const alreadyIn = isInWishlist(itemId);
+
+    try {
+      if (alreadyIn) {
+        await axios.delete(serverUrl + "/api/wishlist/remove", {
+          data: { itemId },
+          withCredentials: true,
+        });
+        toast.success("Removed from wishlist");
+      } else {
+        await axios.post(
+          serverUrl + "/api/wishlist/add",
+          { itemId },
+          { withCredentials: true }
+        );
+        toast.success("Added to wishlist");
+      }
+
+      await getUserWishlist();
+    } catch (err) {
+      toast.error("Could not update wishlist");
+      console.log(err);
+    }
+  };
+
+  // ==============================
+  // COUPON
+  // ==============================
+  const applyCoupon = async (code) => {
+    if (!code?.trim()) return toast.error("Enter a coupon code");
+
+    try {
+      const amount = getCartAmount() + delivery_fee;
+      const res = await axios.post(
+        serverUrl + "/api/coupon/validate",
+        { code, amount },
+        { withCredentials: true }
+      );
+
+      setAppliedCoupon({ code: res.data.code, discount: res.data.discount });
+      toast.success(`Coupon applied: -${currency}${res.data.discount}`);
+    } catch (err) {
+      setAppliedCoupon(null);
+      toast.error(err.response?.data?.message || "Invalid coupon");
+    }
+  };
+
+  const removeCoupon = () => setAppliedCoupon(null);
+
+  const getFinalAmount = () => {
+    const total = getCartAmount() === 0 ? 0 : getCartAmount() + delivery_fee;
+    if (!appliedCoupon) return total;
+    return Math.max(total - appliedCoupon.discount, 0);
+  };
+
+  // ==============================
   // COUNT TOTAL ITEMS
   // ==============================
   const getCartCount = () => {
@@ -175,6 +259,7 @@ function ShopContext({ children }) {
 
   useEffect(() => {
     getUserCart();
+    getUserWishlist();
   }, [userData]);
 
   const value = {
@@ -192,6 +277,13 @@ function ShopContext({ children }) {
     updateQuantity,
     getCartAmount,
     loading,
+    wishlist,
+    isInWishlist,
+    toggleWishlist,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    getFinalAmount,
   };
 
   return (

@@ -5,6 +5,7 @@ import Edit from './pages/Edit'
 import Add from './pages/Add'
 import Lists from './pages/Lists'
 import Orders from './pages/Orders'
+import Coupons from './pages/Coupons'
 import Login from './pages/Login'
 import { adminDataContext } from './context/AdminContext'
 import { ToastContainer, toast } from 'react-toastify';
@@ -21,6 +22,7 @@ function App() {
         <Route path='/add' element={<Add/>}/>
         <Route path='/lists' element={<Lists/>}/>
         <Route path='/orders' element={<Orders/>}/>
+        <Route path='/coupons' element={<Coupons/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/edit/:id' element={<Edit/>}/>
       </Routes>

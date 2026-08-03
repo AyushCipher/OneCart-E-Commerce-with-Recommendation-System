@@ -1,11 +1,12 @@
 import React, { useContext } from "react";
 import { shopDataContext } from "../context/ShopContext";
 import { useNavigate } from "react-router-dom";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 
 function Card({ name, image, id, price, rating }) {
-  let { currency } = useContext(shopDataContext);
+  let { currency, isInWishlist, toggleWishlist } = useContext(shopDataContext);
   let navigate = useNavigate();
+  const inWishlist = isInWishlist(id);
 
   // Ensure rating is always a valid number
   const displayRating = Number(rating) ? Number(rating).toFixed(1) : "0.0";
@@ -13,8 +14,24 @@ function Card({ name, image, id, price, rating }) {
   return (
     <div
       onClick={() => navigate(`/productdetail/${id}`)}
-      className="w-full bg-white/10 backdrop-blur-lg rounded-xl shadow-md hover:shadow-xl hover:scale-[103%] transition-all duration-300 cursor-pointer border border-white/20 overflow-hidden"
+      className="relative w-full bg-white/10 backdrop-blur-lg rounded-xl shadow-md hover:shadow-xl hover:scale-[103%] transition-all duration-300 cursor-pointer border border-white/20 overflow-hidden"
     >
+      {/* WISHLIST TOGGLE */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleWishlist(id);
+        }}
+        className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+      >
+        {inWishlist ? (
+          <FaHeart className="text-red-500 text-sm" />
+        ) : (
+          <FaRegHeart className="text-white text-sm" />
+        )}
+      </button>
+
       {/* IMAGE */}
       <img
         src={image}

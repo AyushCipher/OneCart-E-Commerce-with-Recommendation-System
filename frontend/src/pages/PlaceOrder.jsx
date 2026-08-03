@@ -14,7 +14,7 @@ import { useMLTracking } from '../hooks/useMLTracking'
 function PlaceOrder() {
   let [method,setMethod] = useState('cod')
   let navigate = useNavigate()
-  const {cartItem, setCartItem, getCartAmount, delivery_fee, products } = useContext(shopDataContext)
+  const {cartItem, setCartItem, getCartAmount, delivery_fee, products, appliedCoupon, removeCoupon } = useContext(shopDataContext)
   let {serverUrl} = useContext(authDataContext)
   const { userData } = useContext(userDataContext)
   let [loading ,setLoading] = useState(false)
@@ -55,6 +55,7 @@ function PlaceOrder() {
         if(data){
           navigate("/order")
           setCartItem({})
+          removeCoupon()
         }
       }
     }
@@ -82,7 +83,8 @@ function PlaceOrder() {
       let orderData = {
         address:formData,
         items:orderItems,
-        amount:getCartAmount() + delivery_fee
+        amount:getCartAmount() + delivery_fee,
+        couponCode: appliedCoupon?.code
       }
 
       switch(method){
@@ -103,6 +105,7 @@ function PlaceOrder() {
             })
             
             setCartItem({})
+            removeCoupon()
             toast.success("Order Placed")
             navigate("/order")
             setLoading(false)

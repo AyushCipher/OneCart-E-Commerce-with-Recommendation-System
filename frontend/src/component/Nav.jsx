@@ -3,6 +3,7 @@ import logo from '../assets/logo.png'
 import { IoSearchCircleOutline } from "react-icons/io5";
 import { FaCircleUser } from "react-icons/fa6";
 import { MdOutlineShoppingCart } from "react-icons/md";
+import { FaRegHeart } from "react-icons/fa";
 import { userDataContext } from '../context/UserContext';
 import { IoSearchCircleSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +18,7 @@ import ProfileModal from './ProfileModal';
 function Nav() {
     let {getCurrentUser, userData, setUserData} = useContext(userDataContext)
     let {serverUrl} = useContext(authDataContext)
-    let {showSearch, setShowSearch, search, setSearch, getCartCount} = useContext(shopDataContext)
+    let {showSearch, setShowSearch, search, setSearch, getCartCount, wishlist} = useContext(shopDataContext)
     let [showProfile, setShowProfile] = useState(false)
     let [showProfileModal, setShowProfileModal] = useState(false)
     let navigate = useNavigate()
@@ -62,6 +63,8 @@ function Nav() {
             {showSearch && <IoSearchCircleSharp className='w-[38px] h-[38px] text-[#000000] cursor-pointer' onClick={()=>setShowSearch(prev=>!prev)}/>}
             {!userData && <FaCircleUser className='w-[29px] h-[29px] text-[#000000]  cursor-pointer' onClick={()=>setShowProfile(prev=>!prev)}/>}
             {userData && <div className='w-[30px] h-[30px] bg-[#080808] text-[white] rounded-full flex items-center justify-center cursor-pointer' onClick={()=>setShowProfile(prev=>!prev)}>{userData?.name.slice(0,1)}</div>}
+            <FaRegHeart className='w-[26px] h-[26px] text-[#000000] cursor-pointer hidden md:block' onClick={()=>navigate("/wishlist")}/>
+            {wishlist.length > 0 && <p className='absolute w-[18px] h-[18px] items-center justify-center bg-black px-[5px] py-[2px] text-white rounded-full text-[9px] top-[10px] right-[85px] hidden md:block'>{wishlist.length}</p>}
             <MdOutlineShoppingCart className='w-[30px] h-[30px] text-[#000000]  cursor-pointer hidden md:block' onClick={()=>navigate("/cart")}/>
             <p className='absolute w-[18px] h-[18px] items-center  justify-center bg-black px-[5px] py-[2px] text-white  rounded-full text-[9px] top-[10px] right-[23px] hidden md:block'>{getCartCount()}</p>
         </div>
@@ -117,6 +120,11 @@ function Nav() {
 
             <button className='text-[white] flex items-center justify-center flex-col gap-[2px]' onClick={()=>navigate("/contact")}>
                 <MdContacts className='w-[28px] h-[28px] text-[white]'/> Contact
+            </button>
+
+            <button className='text-[white] flex items-center justify-center flex-col gap-[2px] relative' onClick={()=>navigate("/wishlist")}>
+                <FaRegHeart className='w-[24px] h-[24px] text-[white]'/> Wishlist
+                {wishlist.length > 0 && <p className='absolute w-[16px] h-[16px] flex items-center justify-center bg-white px-[5px] py-[2px] text-black font-semibold rounded-full text-[9px] top-[-6px] right-[2px]'>{wishlist.length}</p>}
             </button>
 
             <button className='text-[white] flex items-center justify-center flex-col gap-[2px]' onClick={()=>navigate("/cart")}>

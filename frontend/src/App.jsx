@@ -12,6 +12,7 @@ import Product from './pages/Product'
 import Contact from './pages/Contact'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
+import Wishlist from './pages/Wishlist'
 import PlaceOrder from './pages/PlaceOrder'
 import Order from './pages/Order'
 import { ToastContainer } from 'react-toastify';
@@ -62,8 +63,11 @@ let location = useLocation()
         <Route path='/productdetail/:productId' 
         element={userData ? <ProductDetail/> : <Navigate to="/login" state={{from: location.pathname}} /> }/>
 
-        <Route path='/cart' 
+        <Route path='/cart'
         element={userData ? <Cart/> : <Navigate to="/login" state={{from: location.pathname}} /> }/>
+
+        <Route path='/wishlist'
+        element={userData ? <Wishlist/> : <Navigate to="/login" state={{from: location.pathname}} /> }/>
 
         <Route path='/placeorder' 
         element={userData ? <PlaceOrder/> : <Navigate to="/login" state={{from: location.pathname}} /> }/>

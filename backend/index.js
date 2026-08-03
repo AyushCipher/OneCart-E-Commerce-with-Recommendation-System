@@ -11,9 +11,13 @@ import productRoutes from './routes/productRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import reviewRouter from './routes/reviewRouter.js';
+import wishlistRoutes from './routes/wishlistRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import mlRecommendationRoutes from './routes/mlRecommendationRoutes.js';
+import notFound from './middleware/notFound.js';
+import errorHandler from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -53,9 +57,16 @@ app.use('/api/product', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/order', orderRoutes);
 app.use('/api/review', reviewRouter);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/coupon', couponRoutes);
 app.use("/api/contact", contactRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/ml', mlRecommendationRoutes); // Advanced ML Recommendations
+
+// 404 for unmatched routes, then the centralized error handler — must be
+// registered last so they see errors from every route above.
+app.use(notFound);
+app.use(errorHandler);
 
 // Start server and connect database
 app.listen(port, () => {

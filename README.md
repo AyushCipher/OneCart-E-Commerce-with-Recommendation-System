@@ -22,13 +22,16 @@ This makes the project especially strong for portfolio review because it demonst
 | Storefront | Home, collections, product detail pages, cart, checkout, order history, about, contact |
 | Authentication | Email/password login, registration, Google login, OTP password recovery, cookie-based sessions |
 | Cart & Orders | Cart add/update/remove, Razorpay checkout, order placement, order status tracking |
+| Wishlist | Save/remove products for later, dedicated wishlist page, live count in nav |
+| Coupons | Percentage/flat discount codes with min-order, max-discount-cap, expiry, and per-user usage limits — discount always recomputed server-side |
 | Reviews | Product review creation and retrieval |
-| Admin Console | Product CRUD, order management, admin login |
+| Admin Console | Product CRUD, order management, coupon management, admin login |
 | Recommendations | Hybrid recommendations, cold-start support, similar products, trending products, category-aware suggestions |
 | Tracking | View, search, add-to-cart, purchase, recommendation click, and time-on-page tracking |
 | AI Interaction | Voice-assisted navigation with browser speech recognition and speech synthesis |
 | Media & Assets | Cloudinary-based image uploads and product media handling |
 | Notifications | Contact form email delivery via Nodemailer |
+| Security | Rate limiting on login/OTP routes, server-side order total recomputation, centralized error handling |
 
 ## Project Architecture
 
@@ -119,7 +122,6 @@ OneCart E-commerce + Recommendation System/
 ├── frontend/                # Customer-facing React app
 ├── admin/                   # Admin React dashboard
 ├── backend/                 # Express API, controllers, models, services
-├── files/                   # Architecture and recommendation documentation
 └── README.md                # Project landing page
 ```
 
@@ -310,6 +312,24 @@ Base backend URL: `http://localhost:8000`
 | POST | `/api/order/list` | Admin order list |
 | POST | `/api/order/status` | Update order status |
 
+### Wishlist
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/api/wishlist/get` | Get the current user's wishlist |
+| POST | `/api/wishlist/add` | Add a product to the wishlist |
+| DELETE | `/api/wishlist/remove` | Remove a product from the wishlist |
+
+### Coupons
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/coupon/validate` | Preview a coupon's discount against the cart amount |
+| POST | `/api/coupon/create` | Admin: create a coupon |
+| GET | `/api/coupon/list` | Admin: list all coupons |
+| PUT | `/api/coupon/toggle/:id` | Admin: enable/disable a coupon |
+| DELETE | `/api/coupon/:id` | Admin: delete a coupon |
+
 ### Reviews
 
 | Method | Endpoint | Purpose |
@@ -379,6 +399,8 @@ Base backend URL: `http://localhost:8000`
 - Add automated tests for critical API flows and recommendation ranking logic.
 - Add deployment automation and environment-specific configuration templates.
 - Introduce an optional LLM-powered shopping assistant for guided discovery and support.
+- Allow local frontend/admin dev servers to call a local backend under CORS (currently only the two production Render origins are allowlisted).
+- Migrate the remaining controllers (auth, product, cart, review, contact, recommendations) to the centralized `AppError`/error-handler pattern already used in `orderController` and `couponController`.
 
 ## Challenges Solved
 
