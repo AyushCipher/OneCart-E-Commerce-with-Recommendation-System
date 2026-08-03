@@ -863,7 +863,7 @@ export const getSystemOverview = async (req, res) => {
  */
 export const clearCache = async (req, res) => {
   try {
-    const { userId, strategy, all } = req.body;
+    const { userId, strategy, all } = req.body || {};
 
     let query = {};
     if (all) {
@@ -896,7 +896,7 @@ export const clearCache = async (req, res) => {
  */
 export const forceRecompute = async (req, res) => {
   try {
-    const { userId, strategy = 'hybrid' } = req.body;
+    const { userId, strategy = 'hybrid' } = req.body || {};
 
     if (!userId) {
       return res.status(400).json({

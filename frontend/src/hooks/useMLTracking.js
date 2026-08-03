@@ -134,7 +134,7 @@ export const useMLTracking = (userId) => {
     if (!productId) return;
 
     try {
-      await axios.post(`${API_BASE}/api/ml/track/cart/add`, {
+      await axios.post(`${API_BASE}/api/ml/track/add-to-cart`, {
         userId,
         productId,
         sessionId: sessionId.current,
