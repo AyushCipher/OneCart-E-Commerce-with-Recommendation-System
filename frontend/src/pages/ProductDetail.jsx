@@ -1,8 +1,10 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 import { shopDataContext } from "../context/ShopContext";
 import { reviewDataContext } from "../context/ReviewContext";
 import { userDataContext } from "../context/UserContext";
+import { authDataContext } from "../context/AuthContext";
 import { FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
 import RelatedProduct from "../component/RelatedProduct";
@@ -15,9 +17,12 @@ function ProductDetail() {
   const { productId } = useParams();
   const { products, currency, addtoCart, loading } = useContext(shopDataContext);
   const { userData } = useContext(userDataContext);
+  const { serverUrl } = useContext(authDataContext);
 
   const { productReviews, getProductReviews, addReview } =
     useContext(reviewDataContext);
+
+  const [hasPurchased, setHasPurchased] = useState(false);
 
   const [productData, setProductData] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
@@ -54,6 +59,31 @@ function ProductDetail() {
   useEffect(() => {
     if (productId) getProductReviews(productId);
   }, [productId]);
+
+  // Only customers who've bought this product can review it (mirrors the
+  // backend guard in reviewController.addReview) — check here too so the
+  // form isn't shown only to be rejected on submit.
+  useEffect(() => {
+    const checkPurchase = async () => {
+      if (!userData?._id || !productId) return setHasPurchased(false);
+
+      try {
+        const res = await axios.post(
+          `${serverUrl}/api/order/userorder`,
+          {},
+          { withCredentials: true }
+        );
+        const purchased = res.data.some((order) =>
+          order.items.some((item) => item._id === productId)
+        );
+        setHasPurchased(purchased);
+      } catch (err) {
+        setHasPurchased(false);
+      }
+    };
+
+    checkPurchase();
+  }, [userData?._id, productId, serverUrl]);
 
   // ML Tracking: Track view with product metadata
   useEffect(() => {
@@ -232,32 +262,40 @@ function ProductDetail() {
             <div className="p-6 bg-gray-900 rounded-lg border border-gray-700">
               <h2 className="text-xl mb-2 font-semibold">Write a Review</h2>
 
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <FaStar
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className={`cursor-pointer text-2xl ${
-                      star <= rating ? "text-yellow-400" : "text-gray-600"
-                    }`}
+              {hasPurchased ? (
+                <>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FaStar
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className={`cursor-pointer text-2xl ${
+                          star <= rating ? "text-yellow-400" : "text-gray-600"
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <textarea
+                    className="mt-3 w-full bg-gray-800 border border-gray-700 p-3 rounded"
+                    rows={3}
+                    placeholder="Write your feedback..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
                   />
-                ))}
-              </div>
 
-              <textarea
-                className="mt-3 w-full bg-gray-800 border border-gray-700 p-3 rounded"
-                rows={3}
-                placeholder="Write your feedback..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-
-              <button
-                className="mt-3 px-5 py-2 bg-blue-600 rounded hover:bg-blue-500"
-                onClick={handleSubmitReview}
-              >
-                Submit Review
-              </button>
+                  <button
+                    className="mt-3 px-5 py-2 bg-blue-600 rounded hover:bg-blue-500"
+                    onClick={handleSubmitReview}
+                  >
+                    Submit Review
+                  </button>
+                </>
+              ) : (
+                <p className="text-gray-400">
+                  Only customers who've purchased this product can write a review.
+                </p>
+              )}
             </div>
 
             {/* REVIEWS LIST */}
