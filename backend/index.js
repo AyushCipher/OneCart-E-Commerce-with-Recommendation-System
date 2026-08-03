@@ -33,7 +33,9 @@ app.use(cookieParser());
 // CORS config
 const allowedOrigins = [
   "https://onecart-recommendation-frontend.onrender.com",
-  "https://onecart-recommendation-admin.onrender.com"
+  "https://onecart-recommendation-admin.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:5174"
 ];
 
 app.use(
