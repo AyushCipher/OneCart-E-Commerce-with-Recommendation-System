@@ -1,6 +1,7 @@
 import Review from "../model/reviewModel.js";
 import User from "../model/userModel.js";
 import Product from "../model/productModel.js";
+import Order from "../model/orderModel.js";
 
 export const addReview = async (req, res) => {
   try {
@@ -9,6 +10,11 @@ export const addReview = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const hasPurchased = await Order.findOne({ userId, "items._id": productId });
+    if (!hasPurchased) {
+      return res.status(403).json({ message: "You can only review products you have purchased" });
+    }
 
     const alreadyReviewed = await Review.findOne({ product: productId, user: userId });
     if (alreadyReviewed) {
